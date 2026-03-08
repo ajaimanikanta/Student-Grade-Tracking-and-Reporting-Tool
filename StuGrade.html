@@ -1,0 +1,1886 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>StuGrade - Student Grade Tracking Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-soft: #111827;
+      --bg-card: #1f2937;
+      --primary: #4f46e5;
+      --primary-soft: rgba(79, 70, 229, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --success: #22c55e;
+      --danger: #f97316;
+      --fail: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #1f2937, #020617);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .layout {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 230px;
+      background: linear-gradient(180deg, #020617, #030712);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1.25rem;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      margin-bottom: 2rem;
+    }
+
+    .brand h2 {
+      font-size: 1.4rem;
+      letter-spacing: 0.06em;
+      color: var(--primary);
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 0.5rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+    }
+
+    .nav-item:hover {
+      background: #111827;
+      color: var(--text);
+      transform: translateX(4px);
+    }
+
+    .nav-item.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .nav-item i {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .topbar h1 {
+      font-size: 1.6rem;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .user-badge {
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 0.85rem;
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .section.active {
+      display: block;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
+      animation: cardSlideIn 0.6s ease-out forwards;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 50px rgba(79, 70, 229, 0.2);
+    }
+
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+    .card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes cardSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card h3 {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .card-number {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-subtext {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* Panel */
+    .panel {
+      background: var(--bg-card);
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      padding: 1rem 1rem 1.2rem;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
+      margin-bottom: 1.5rem;
+      animation: panelSlideIn 0.5s ease-out;
+    }
+
+    @keyframes panelSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .panel-header h2 {
+      font-size: 1.1rem;
+    }
+
+    .panel-header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .filters {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filters select, .btn-input {
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.4rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .filters select:hover, .btn-input:hover {
+      background: #1f2937;
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+
+    .filters select:focus, .btn-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #1f2937;
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    /* Button */
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      background: var(--primary);
+      color: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      background: #4338ca;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.7rem;
+      font-size: 0.85rem;
+    }
+
+    .btn-danger {
+      background: var(--fail);
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-success {
+      background: var(--success);
+    }
+
+    .btn-success:hover {
+      background: #16a34a;
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+    }
+
+    /* Table */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--bg-soft);
+      padding: 0.75rem;
+      text-align: left;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr {
+      transition: background 0.2s ease;
+    }
+
+    tr:hover {
+      background: rgba(79, 70, 229, 0.05);
+    }
+
+    .grade-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 0.3rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .grade-a {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+    }
+
+    .grade-b {
+      background: rgba(59, 130, 246, 0.2);
+      color: #3b82f6;
+    }
+
+    .grade-c {
+      background: rgba(249, 115, 22, 0.2);
+      color: var(--danger);
+    }
+
+    .grade-d {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--fail);
+    }
+
+    .grade-f {
+      background: rgba(239, 68, 68, 0.3);
+      color: #b91c1c;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeInBg 0.3s ease-out;
+    }
+
+    .modal.active {
+      display: flex;
+      animation: fadeInBg 0.3s ease-out;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: slideUpIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes fadeInBg {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUpIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .modal-header h3 {
+      font-size: 1.1rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.5rem;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+      transform: scale(1.1);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--text);
+      border-radius: 0.4rem;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:hover, .form-group select:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #1f2937;
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    .helper-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+
+    .btn-secondary {
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background: #111827;
+      border-color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), slideOut 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 2.6s forwards;
+      z-index: 2000;
+    }
+
+    .toast.success {
+      border-left: 3px solid var(--success);
+    }
+
+    .toast.error {
+      border-left: 3px solid var(--fail);
+    }
+
+    .toast.warning {
+      border-left: 3px solid var(--danger);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .loading-animation {
+      width: 150px;
+      height: 150px;
+      position: relative;
+    }
+
+    .orbital {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      border: 2px solid rgba(79, 70, 229, 0.3);
+      border-radius: 50%;
+      animation: orbit 6s linear infinite;
+    }
+
+    .orbital:nth-child(2) {
+      animation: orbit 6s linear infinite reverse;
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    @keyframes orbit {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .item {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      top: 50%;
+      left: 50%;
+      transform-origin: -55px 0;
+      animation: rotate-item 6s linear infinite;
+    }
+
+    .item:nth-child(2) {
+      animation: rotate-item 6s linear infinite reverse;
+    }
+
+    @keyframes rotate-item {
+      from { transform: rotate(0deg) translateX(-55px); }
+      to { transform: rotate(360deg) translateX(-55px); }
+    }
+
+    .loading-text {
+      text-align: center;
+    }
+
+    .loading-text h2 {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+
+    .loading-text p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .dot-loader {
+      display: inline-flex;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .locked-section {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      animation: fadeInBg 0.3s ease-out;
+    }
+
+    .locked-section.active {
+      display: flex;
+    }
+
+    .lock-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .main {
+        padding: 1rem;
+      }
+
+      .cards {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <!-- Teacher Password Lock Screen -->
+  <div id="teacherLockScreen" class="locked-section active">
+   <div class="modal-content" style="max-width: 450px;">
+    <div id="loadingScreen" class="loading-container" style="display: none;">
+     <div class="loading-animation">
+      <div class="orbital"></div>
+      <div class="orbital"></div>
+      <div class="item">
+       📚
+      </div>
+      <div class="item">
+       📝
+      </div>
+     </div>
+     <div class="loading-text">
+      <h2>StuGrade</h2>
+      <p>Loading your dashboard</p>
+      <div class="dot-loader">
+       <div class="dot"></div>
+       <div class="dot"></div>
+       <div class="dot"></div>
+      </div>
+     </div>
+    </div>
+    <div id="loginScreen">
+     <div style="text-align: center; margin-bottom: 1.5rem;">
+      <div class="lock-icon">
+       🔒
+      </div>
+      <h2 style="margin-bottom: 0.5rem;">Teacher Mode Access</h2>
+      <p style="color: var(--muted); margin-bottom: 1.5rem;">Secure access required for teacher dashboard</p>
+     </div>
+     <form id="teacherLoginForm">
+      <div class="form-group">
+       <label>Enter Teacher Password</label> <input type="password" id="teacherPassword" placeholder="Enter password" required autofocus>
+      </div>
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+       <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="showStudentLogin()">Student Access</button> <button type="submit" class="btn" style="flex: 1;">Unlock</button>
+      </div>
+     </form>
+    </div>
+   </div>
+  </div><!-- Student Login Modal -->
+  <div id="studentLoginModal" class="modal">
+   <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+     <h3>Student Login</h3><button class="modal-close" onclick="closeModal('studentLoginModal')">×</button>
+    </div>
+    <form id="studentLoginForm">
+     <div class="form-group">
+      <label>Enter Your Roll Number</label> <input type="text" id="studentRollInput" placeholder="e.g., 001" required autofocus>
+     </div>
+     <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="switchToTeacherMode()">Teacher Access</button> <button type="submit" class="btn">View My Grades</button>
+     </div>
+    </form>
+   </div>
+  </div>
+  <div class="layout" id="mainLayout" style="display: none;">
+   <!-- Sidebar -->
+   <div class="sidebar">
+    <div class="brand">
+     <h2>StuGrade</h2>
+    </div>
+    <nav class="nav">
+     <button class="nav-item active" data-section="dashboard"> <i data-lucide="layout-dashboard"></i> Dashboard </button> <button class="nav-item" data-section="students"> <i data-lucide="users"></i> Students </button> <button class="nav-item" data-section="grades"> <i data-lucide="bar-chart-3"></i> Grades </button> <button class="nav-item" data-section="reports"> <i data-lucide="file-text"></i> Reports </button>
+    </nav>
+   </div><!-- Main Content -->
+   <div class="main">
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="section active">
+     <div class="topbar">
+      <h1>Dashboard</h1>
+      <div class="topbar-right">
+       <button class="btn btn-sm" id="toggleModeBtn">Switch to Student Mode</button> <span class="user-badge" id="modeIndicator">Teacher Mode</span>
+      </div>
+     </div>
+     <div class="cards">
+      <div class="card">
+       <h3>Total Students</h3>
+       <div class="card-number" id="totalStudents">
+        0
+       </div>
+       <div class="card-subtext">
+        Active students
+       </div>
+      </div>
+      <div class="card">
+       <h3>Average Grade</h3>
+       <div class="card-number" id="avgGrade">
+        0.0
+       </div>
+       <div class="card-subtext">
+        Class average
+       </div>
+      </div>
+      <div class="card">
+       <h3>Grade A Count</h3>
+       <div class="card-number" id="gradeACount">
+        0
+       </div>
+       <div class="card-subtext">
+        Students with A
+       </div>
+      </div>
+      <div class="card">
+       <h3>At Risk</h3>
+       <div class="card-number" id="atRiskCount">
+        0
+       </div>
+       <div class="card-subtext">
+        D or F grades
+       </div>
+      </div>
+     </div>
+     <div class="panel">
+      <div class="panel-header">
+       <h2>Recent Grades</h2>
+      </div>
+      <div class="table-container">
+       <table>
+        <thead>
+         <tr>
+          <th>Student Name</th>
+          <th>Subject</th>
+          <th>Grade</th>
+          <th>Date</th>
+         </tr>
+        </thead>
+        <tbody id="recentGradesTable">
+         <tr>
+          <td colspan="4" class="no-data">No grades yet</td>
+         </tr>
+        </tbody>
+       </table>
+      </div>
+     </div>
+    </section><!-- Students Section -->
+    <section id="students" class="section">
+     <div class="topbar">
+      <h1>Students</h1>
+      <div class="topbar-right">
+       <button class="btn" id="addStudentBtn"> <i data-lucide="plus"></i> Add Student </button>
+      </div>
+     </div>
+     <div class="panel">
+      <div class="panel-header">
+       <h2>Student List</h2>
+       <div class="panel-header-actions">
+        <input type="text" class="btn-input" id="searchStudent" placeholder="Search students...">
+       </div>
+      </div>
+      <div class="table-container">
+       <table>
+        <thead>
+         <tr>
+          <th>Name</th>
+          <th>Roll Number</th>
+          <th>Actions</th>
+         </tr>
+        </thead>
+        <tbody id="studentsTable">
+         <tr>
+          <td colspan="3" class="no-data">No students added yet</td>
+         </tr>
+        </tbody>
+       </table>
+      </div>
+     </div>
+    </section><!-- Grades Section -->
+    <section id="grades" class="section">
+     <div class="topbar">
+      <h1>Grade Management</h1>
+      <div class="topbar-right">
+       <button class="btn" id="addGradeBtn"> <i data-lucide="plus"></i> Add Grade </button>
+      </div>
+     </div>
+     <div class="panel">
+      <div class="panel-header">
+       <h2>Grade Records</h2>
+       <div class="panel-header-actions">
+        <select id="filterSubject" class="btn-input"> <option value="">All Subjects</option> <option value="DSA">DSA</option> <option value="MAI">MAI</option> <option value="GLB">GLB</option> <option value="FWD">FWD</option> <option value="CSE">CSE</option> </select>
+       </div>
+      </div>
+      <div class="table-container">
+       <table>
+        <thead>
+         <tr>
+          <th>Student</th>
+          <th>Subject</th>
+          <th>Grade</th>
+          <th>Score</th>
+          <th>Actions</th>
+         </tr>
+        </thead>
+        <tbody id="gradesTable">
+         <tr>
+          <td colspan="6" class="no-data">No grades recorded</td>
+         </tr>
+        </tbody>
+       </table>
+      </div>
+     </div>
+    </section><!-- Reports Section -->
+    <section id="reports" class="section">
+     <div class="topbar">
+      <h1>Reports</h1>
+     </div>
+     <div class="cards">
+      <div class="card">
+       <h3>Highest Grade</h3>
+       <div class="card-number" id="highestGrade">
+        -
+       </div>
+       <div class="card-subtext" id="highestStudent">
+        N/A
+       </div>
+      </div>
+      <div class="card">
+       <h3>Lowest Grade</h3>
+       <div class="card-number" id="lowestGrade">
+        -
+       </div>
+       <div class="card-subtext" id="lowestStudent">
+        N/A
+       </div>
+      </div>
+      <div class="card">
+       <h3>Pass Rate</h3>
+       <div class="card-number" id="passRate">
+        0%
+       </div>
+       <div class="card-subtext">
+        D or above
+       </div>
+      </div>
+      <div class="card">
+       <h3>Fail Rate</h3>
+       <div class="card-number" id="failRate">
+        0%
+       </div>
+       <div class="card-subtext">
+        F grades
+       </div>
+      </div>
+     </div>
+     <div class="panel">
+      <div class="panel-header">
+       <h2>Grade Distribution</h2>
+      </div>
+      <div style="padding: 1rem;">
+       <div id="gradeDistribution" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <!-- Grade distribution will be shown here -->
+       </div>
+      </div>
+     </div>
+    </section>
+   </div>
+  </div><!-- Add Student Modal -->
+  <div id="addStudentModal" class="modal">
+   <div class="modal-content">
+    <div class="modal-header">
+     <h3>Add New Student</h3><button class="modal-close" onclick="closeModal('addStudentModal')">×</button>
+    </div>
+    <form id="addStudentForm">
+     <div class="form-group">
+      <label>Full Name</label> <input type="text" id="studentName" required>
+     </div>
+     <div class="form-group">
+      <label>Roll Number</label> <input type="text" id="studentRoll" required>
+     </div>
+     <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('addStudentModal')">Cancel</button> <button type="submit" class="btn">Add Student</button>
+     </div>
+    </form>
+   </div>
+  </div><!-- Add Grade Modal -->
+  <div id="addGradeModal" class="modal">
+   <div class="modal-content">
+    <div class="modal-header">
+     <h3 id="gradeModalTitle">Add New Grade</h3><button class="modal-close" onclick="closeModal('addGradeModal')">×</button>
+    </div>
+    <form id="addGradeForm">
+     <div class="form-group">
+      <label>Student</label> <select id="gradeStudent" required> <option value="">Select a student</option> </select>
+     </div>
+     <div class="form-group">
+      <label>Subject</label> <select id="gradeSubject" required> <option value="">Select a subject</option> <option value="DSA">DSA</option> <option value="MAI">MAI</option> <option value="GLB">GLB</option> <option value="FWD">FWD</option> <option value="CSE">CSE</option> </select>
+     </div>
+     <div class="form-group">
+      <label>Score (0-100)</label> <input type="number" id="gradeScore" min="0" max="100" required>
+     </div>
+     <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('addGradeModal')">Cancel</button> <button type="submit" class="btn">Save Grade</button>
+     </div>
+    </form>
+   </div>
+  </div>
+  <script>
+    // Constants
+    const TEACHER_PASSWORD = 'klhb@123';
+
+    // Data Store
+    let students = [];
+    let grades = [];
+    let editingGradeId = null;
+    let currentMode = 'student'; // 'teacher' or 'student' - starts as student
+    let currentStudentRoll = null;
+    let isTeacherAuthenticated = false;
+
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        students = data.map(item => ({
+          id: parseInt(item.id),
+          name: item.name,
+          roll: item.roll
+        }));
+        if (currentMode === 'teacher' && document.getElementById('students').classList.contains('active')) {
+          renderStudents();
+        }
+        updateDashboard();
+      }
+    };
+
+    // Initialize SDK and load data
+    async function initializeApp() {
+      // Check if Data SDK is available (Canva environment)
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Failed to initialize data SDK');
+        }
+      } else {
+        // Standalone mode - just use local data
+        console.log('Running in standalone mode (Data SDK not available)');
+      }
+      lucide.createIcons();
+      setupEventListeners();
+      loadSampleData();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeApp();
+      // Don't show main layout until teacher is authenticated
+    });
+
+    // Load Sample Data
+    function loadSampleData() {
+      // Only load sample data on first load if no students exist
+      if (students.length === 0) {
+        const initialStudents = [
+          { id: 1, name: 'Alice Johnson', roll: '001' },
+          { id: 2, name: 'Bob Smith', roll: '002' },
+          { id: 3, name: 'Carol Davis', roll: '003' },
+          { id: 4, name: 'David Wilson', roll: '004' },
+        ];
+
+        initialStudents.forEach(async (student) => {
+          // Only create in Data SDK if available
+          if (window.dataSdk) {
+            await window.dataSdk.create({
+              id: student.id.toString(),
+              name: student.name,
+              roll: student.roll
+            });
+          } else {
+            // Add to local students array in standalone mode
+            students.push(student);
+          }
+        });
+      }
+
+      grades = [
+        { id: 1, studentId: 1, name: 'Alice Johnson', subject: 'DSA', score: 95, date: '2024-01-15' },
+        { id: 2, studentId: 2, name: 'Bob Smith', subject: 'MAI', score: 78, date: '2024-01-15' },
+        { id: 3, studentId: 3, name: 'Carol Davis', subject: 'GLB', score: 88, date: '2024-01-15' },
+        { id: 4, studentId: 4, name: 'David Wilson', subject: 'FWD', score: 65, date: '2024-01-14' },
+      ];
+    }
+
+    // Setup Event Listeners
+    function setupEventListeners() {
+      // Navigation
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const sectionId = this.dataset.section;
+          switchSection(sectionId);
+        });
+      });
+
+      // Mode Toggle
+      document.getElementById('toggleModeBtn').addEventListener('click', switchToStudentLogout);
+
+      // Teacher Login Form
+      document.getElementById('teacherLoginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const password = document.getElementById('teacherPassword').value;
+        authenticateTeacher(password);
+      });
+
+      // Student Login Form
+      document.getElementById('studentLoginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const roll = document.getElementById('studentRollInput').value;
+        loginStudent(roll);
+      });
+
+      // Add Student
+      document.getElementById('addStudentBtn').addEventListener('click', () => {
+        editingStudentId = null;
+        document.getElementById('addStudentForm').reset();
+        document.querySelector('#addStudentModal .modal-header h3').textContent = 'Add New Student';
+        openModal('addStudentModal');
+      });
+
+      // Add Grade
+      document.getElementById('addGradeBtn').addEventListener('click', () => {
+        editingGradeId = null;
+        document.getElementById('addGradeForm').reset();
+        document.getElementById('gradeModalTitle').textContent = 'Add New Grade';
+        updateGradeSelectOptions();
+        openModal('addGradeModal');
+      });
+
+      // Forms
+      document.getElementById('addStudentForm').addEventListener('submit', addStudent);
+      document.getElementById('addGradeForm').addEventListener('submit', addGrade);
+
+      // Search
+      document.getElementById('searchStudent').addEventListener('input', filterStudents);
+
+      // Filter
+      document.getElementById('filterSubject').addEventListener('change', filterGrades);
+    }
+
+    // Teacher Authentication
+    function authenticateTeacher(password) {
+      console.log('Password entered:', password);
+      console.log('Expected password:', TEACHER_PASSWORD);
+      console.log('Match:', password === TEACHER_PASSWORD);
+      
+      if (password === TEACHER_PASSWORD) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('loadingScreen').style.display = 'flex';
+        
+        setTimeout(() => {
+          isTeacherAuthenticated = true;
+          currentMode = 'teacher';
+          document.getElementById('teacherLockScreen').classList.remove('active');
+          document.getElementById('mainLayout').style.display = 'flex';
+          updateModeUI();
+          switchSection('dashboard');
+          showToast('Teacher mode activated! 🔓', 'success');
+        }, 2000);
+      } else {
+        showToast('Invalid password. Please try again.', 'error');
+        document.getElementById('teacherPassword').value = '';
+        document.getElementById('teacherPassword').focus();
+      }
+    }
+
+    // Show Student Login
+    function showStudentLogin() {
+      document.getElementById('teacherLockScreen').classList.remove('active');
+      document.getElementById('loginScreen').style.display = 'block';
+      document.getElementById('loadingScreen').style.display = 'none';
+      openModal('studentLoginModal');
+    }
+
+    // Switch Section
+    function switchSection(sectionId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+
+      if (sectionId === 'students') renderStudents();
+      if (sectionId === 'grades') renderGrades();
+      if (sectionId === 'reports') updateReports();
+    }
+
+    // Add Student
+    async function addStudent(e) {
+      e.preventDefault();
+      const name = document.getElementById('studentName').value;
+      const roll = document.getElementById('studentRoll').value;
+
+      if (editingStudentId) {
+        const student = students.find(s => s.id === editingStudentId);
+        if (window.dataSdk && student.__backendId) {
+          const updatedStudent = {
+            __backendId: student.__backendId,
+            id: student.id.toString(),
+            name,
+            roll
+          };
+          const result = await window.dataSdk.update(updatedStudent);
+          if (result.isOk) {
+            showToast('Student updated successfully!', 'success');
+          } else {
+            showToast('Error updating student', 'error');
+          }
+        } else {
+          // Standalone mode - update local data
+          student.name = name;
+          student.roll = roll;
+          showToast('Student updated successfully!', 'success');
+        }
+        editingStudentId = null;
+      } else {
+        const newId = Math.max(...students.map(s => s.id), 0) + 1;
+        if (window.dataSdk) {
+          const result = await window.dataSdk.create({
+            id: newId.toString(),
+            name,
+            roll
+          });
+          if (result.isOk) {
+            showToast('Student added successfully!', 'success');
+          } else {
+            showToast('Error adding student', 'error');
+          }
+        } else {
+          // Standalone mode - add to local data
+          students.push({ id: newId, name, roll });
+          showToast('Student added successfully!', 'success');
+        }
+      }
+
+      closeModal('addStudentModal');
+      renderStudents();
+      updateDashboard();
+    }
+
+    // Mode Switching Functions
+    function switchToStudentLogout() {
+      closeModal('studentLoginModal');
+      isTeacherAuthenticated = false;
+      currentMode = 'student';
+      currentStudentRoll = null;
+      document.getElementById('mainLayout').style.display = 'none';
+      document.getElementById('teacherLockScreen').classList.add('active');
+      document.getElementById('loginScreen').style.display = 'block';
+      document.getElementById('loadingScreen').style.display = 'none';
+      document.getElementById('teacherPassword').value = '';
+      document.getElementById('studentRollInput').value = '';
+      showToast('Logged out from teacher mode', 'warning');
+    }
+
+    function switchToTeacherMode() {
+      closeModal('studentLoginModal');
+      currentMode = 'teacher';
+      currentStudentRoll = null;
+      document.getElementById('mainLayout').style.display = 'none';
+      document.getElementById('teacherLockScreen').classList.add('active');
+      document.getElementById('loginScreen').style.display = 'block';
+      document.getElementById('loadingScreen').style.display = 'none';
+      updateModeUI();
+    }
+
+    function loginStudent(roll) {
+      const student = students.find(s => s.roll.toLowerCase() === roll.toLowerCase());
+      if (!student) {
+        showToast('Roll number not found!', 'error');
+        return;
+      }
+      currentMode = 'student';
+      currentStudentRoll = roll;
+      closeModal('studentLoginModal');
+      document.getElementById('mainLayout').style.display = 'flex';
+      updateModeUI();
+      switchSection('dashboard');
+      updateDashboard();
+      showToast(`Welcome, ${student.name}! 👋`, 'success');
+
+      // Check if student has scores below 50
+      const studentGrades = grades.filter(g => g.studentId === student.id);
+      const hasLowScores = studentGrades.some(g => g.score < 50);
+      
+      if (hasLowScores) {
+        playWarningSound();
+      }
+    }
+
+    // Play Warning Sound for Low Scores - FAAHHH Air Horn
+    function playWarningSound() {
+      try {
+        // Using your uploaded local file 'fahhhhh.mp3'
+        const audio = new Audio('fahhhhh.mp3');
+        
+        // Ensure the sound is loud as requested
+        audio.volume = 1.0; 
+        
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log('FAAHHH sound played successfully');
+              showToast('⚠️ FAAHHH! You have failed subjects!', 'error');
+            })
+            .catch(err => {
+              console.log('Autoplay blocked. Sound will trigger on next click.', err);
+              // Fallback to synthesized sound if file is missing
+              playFallbackSound();
+            });
+        }
+     
+      } catch (err) {
+        console.log('Audio API error:', err);
+        // Fallback to synthesized sound
+        playFallbackSound();
+      }
+    }
+
+    // Fallback: Generate beep tone for low scores
+    function playFallbackSound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioContext.currentTime;
+        
+        // Create the iconic "FAAHHH" air horn sound using frequency sweep
+        const osc1 = audioContext.createOscillator();
+        const osc2 = audioContext.createOscillator();
+        const osc3 = audioContext.createOscillator();
+        const gain1 = audioContext.createGain();
+        const gain2 = audioContext.createGain();
+        const gain3 = audioContext.createGain();
+        const masterGain = audioContext.createGain();
+        
+        // Connect oscillators to gains
+        osc1.connect(gain1);
+        osc2.connect(gain2);
+        osc3.connect(gain3);
+        
+        gain1.connect(masterGain);
+        gain2.connect(masterGain);
+        gain3.connect(masterGain);
+        masterGain.connect(audioContext.destination);
+        
+        // Main frequency sweep - starts high and drops (characteristic of air horn)
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(800, now);
+        osc1.frequency.exponentialRampToValueAtTime(200, now + 0.6);
+        gain1.gain.setValueAtTime(0.4, now);
+        gain1.gain.exponentialRampToValueAtTime(0.1, now + 0.6);
+        
+        // Second harmonic for richness
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(400, now);
+        osc2.frequency.exponentialRampToValueAtTime(100, now + 0.6);
+        gain2.gain.setValueAtTime(0.2, now);
+        gain2.gain.exponentialRampToValueAtTime(0.05, now + 0.6);
+        
+        // Third harmonic
+        osc3.type = 'sawtooth';
+        osc3.frequency.setValueAtTime(600, now);
+        osc3.frequency.exponentialRampToValueAtTime(150, now + 0.6);
+        gain3.gain.setValueAtTime(0.15, now);
+        gain3.gain.exponentialRampToValueAtTime(0.02, now + 0.6);
+        
+        // Master volume envelope
+        masterGain.gain.setValueAtTime(0.5, now);
+        masterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+        
+        // Start and stop
+        osc1.start(now);
+        osc2.start(now);
+        osc3.start(now);
+        
+        osc1.stop(now + 0.6);
+        osc2.stop(now + 0.6);
+        osc3.stop(now + 0.6);
+
+        showToast('⚠️ FAAHHH! You have scores below 50', 'warning');
+      } catch (err) {
+        console.log('Audio not available in this environment');
+        showToast('⚠️ Warning: You have scores below 50', 'warning');
+      }
+    }
+
+    function updateModeUI() {
+      const modeIndicator = document.getElementById('modeIndicator');
+      const toggleBtn = document.getElementById('toggleModeBtn');
+
+      if (currentMode === 'student') {
+        modeIndicator.textContent = `Student Mode - ${currentStudentRoll}`;
+        toggleBtn.textContent = 'Switch to Teacher Mode';
+        toggleBtn.onclick = switchToTeacherMode;
+
+        // Hide teacher-only navigation items
+        document.querySelector('[data-section="students"]').style.display = 'none';
+        document.querySelector('[data-section="grades"]').style.display = 'none';
+        document.querySelector('[data-section="reports"]').style.display = 'none';
+      } else {
+        modeIndicator.textContent = 'Teacher Mode 🔒';
+        toggleBtn.textContent = 'Logout';
+        toggleBtn.onclick = switchToStudentLogout;
+
+        // Show all navigation items
+        document.querySelector('[data-section="students"]').style.display = 'flex';
+        document.querySelector('[data-section="grades"]').style.display = 'flex';
+        document.querySelector('[data-section="reports"]').style.display = 'flex';
+      }
+    }
+
+    // Render Students
+    function renderStudents() {
+      const tbody = document.getElementById('studentsTable');
+      if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="no-data">No students added yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = students.map(student => `
+        <tr>
+          <td>${student.name}</td>
+          <td>${student.roll}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-sm" onclick="editStudent(${student.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Delete Student
+    async function deleteStudent(id) {
+      const student = students.find(s => s.id === id);
+      if (!student) {
+        showToast('Student not found', 'error');
+        return;
+      }
+
+      if (window.dataSdk && student.__backendId) {
+        const result = await window.dataSdk.delete(student);
+        if (result.isOk) {
+          students = students.filter(s => s.id !== id);
+          grades = grades.filter(g => g.studentId !== id);
+          renderStudents();
+          updateDashboard();
+          showToast('Student deleted', 'success');
+        } else {
+          showToast('Error deleting student', 'error');
+        }
+      } else {
+        // Standalone mode - delete from local data
+        students = students.filter(s => s.id !== id);
+        grades = grades.filter(g => g.studentId !== id);
+        renderStudents();
+        updateDashboard();
+        showToast('Student deleted', 'success');
+      }
+    }
+
+    // Filter Students
+    function filterStudents() {
+      const search = document.getElementById('searchStudent').value.toLowerCase();
+      const tbody = document.getElementById('studentsTable');
+      
+      const filtered = students.filter(s => 
+        s.name.toLowerCase().includes(search) || 
+        s.roll.toLowerCase().includes(search)
+      );
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="no-data">No students found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(student => `
+        <tr>
+          <td>${student.name}</td>
+          <td>${student.roll}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-sm" onclick="editStudent(${student.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Add Grade
+    function addGrade(e) {
+      e.preventDefault();
+      const studentId = parseInt(document.getElementById('gradeStudent').value);
+      const subject = document.getElementById('gradeSubject').value;
+      const score = parseInt(document.getElementById('gradeScore').value);
+      const date = new Date().toISOString().split('T')[0];
+
+      const student = students.find(s => s.id === studentId);
+      
+      if (editingGradeId) {
+        const gradeIndex = grades.findIndex(g => g.id === editingGradeId);
+        grades[gradeIndex] = {
+          id: editingGradeId,
+          studentId,
+          name: student.name,
+          subject,
+          score,
+          date
+        };
+        showToast('Grade updated successfully!', 'success');
+      } else {
+        const newGrade = {
+          id: Math.max(...grades.map(g => g.id), 0) + 1,
+          studentId,
+          name: student.name,
+          subject,
+          score,
+          date
+        };
+        grades.push(newGrade);
+        showToast('Grade added successfully!', 'success');
+      }
+
+      closeModal('addGradeModal');
+      renderGrades();
+      updateDashboard();
+    }
+
+    // Render Grades
+    function renderGrades() {
+      const tbody = document.getElementById('gradesTable');
+      if (grades.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="no-data">No grades recorded</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = grades.map(grade => `
+        <tr>
+          <td>${grade.name}</td>
+          <td>${grade.subject}</td>
+          <td><span class="grade-badge ${getGradeBadgeClass(grade.score)}">${getLetterGrade(grade.score)}</span></td>
+          <td>${grade.score}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-sm" onclick="editGrade(${grade.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteGrade(${grade.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Edit Student
+    let editingStudentId = null;
+
+    function editStudent(id) {
+      const student = students.find(s => s.id === id);
+      editingStudentId = id;
+      document.getElementById('studentName').value = student.name;
+      document.getElementById('studentRoll').value = student.roll;
+      openModal('addStudentModal');
+    }
+
+    // Edit Grade
+    function editGrade(id) {
+      const grade = grades.find(g => g.id === id);
+      editingGradeId = id;
+      document.getElementById('gradeStudent').value = grade.studentId;
+      document.getElementById('gradeSubject').value = grade.subject;
+      document.getElementById('gradeScore').value = grade.score;
+      document.getElementById('gradeModalTitle').textContent = 'Edit Grade';
+      updateGradeSelectOptions();
+      openModal('addGradeModal');
+    }
+
+    // Delete Grade
+    function deleteGrade(id) {
+      grades = grades.filter(g => g.id !== id);
+      renderGrades();
+      updateDashboard();
+      showToast('Grade deleted', 'success');
+    }
+
+    // Filter Grades
+    function filterGrades() {
+      const subject = document.getElementById('filterSubject').value;
+      const tbody = document.getElementById('gradesTable');
+      
+      const filtered = subject ? grades.filter(g => g.subject === subject) : grades;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="no-data">No grades found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(grade => `
+        <tr>
+          <td>${grade.name}</td>
+          <td>${grade.subject}</td>
+          <td><span class="grade-badge ${getGradeBadgeClass(grade.score)}">${getLetterGrade(grade.score)}</span></td>
+          <td>${grade.score}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-sm" onclick="editGrade(${grade.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteGrade(${grade.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Update Dashboard
+    function updateDashboard() {
+      if (currentMode === 'student') {
+        updateStudentDashboard();
+      } else {
+        updateTeacherDashboard();
+      }
+    }
+
+    function updateTeacherDashboard() {
+      document.getElementById('totalStudents').textContent = students.length;
+      
+      const avgGrade = grades.length > 0 
+        ? (grades.reduce((sum, g) => sum + g.score, 0) / grades.length).toFixed(1)
+        : 0;
+      document.getElementById('avgGrade').textContent = avgGrade;
+
+      const gradeACount = grades.filter(g => g.score >= 90).length;
+      document.getElementById('gradeACount').textContent = gradeACount;
+
+      const atRiskCount = grades.filter(g => g.score < 65).length;
+      document.getElementById('atRiskCount').textContent = atRiskCount;
+
+      renderRecentGrades();
+    }
+
+    function updateStudentDashboard() {
+      const student = students.find(s => s.roll.toLowerCase() === currentStudentRoll.toLowerCase());
+      const studentGrades = grades.filter(g => g.studentId === student.id);
+
+      document.getElementById('totalStudents').textContent = studentGrades.length;
+      document.querySelector('.card:nth-child(1) h3').textContent = 'Total Grades';
+      document.querySelector('.card:nth-child(1) .card-subtext').textContent = 'Grades received';
+      
+      const avgGrade = studentGrades.length > 0 
+        ? (studentGrades.reduce((sum, g) => sum + g.score, 0) / studentGrades.length).toFixed(1)
+        : 0;
+      document.getElementById('avgGrade').textContent = avgGrade;
+      document.querySelector('.card:nth-child(2) .card-subtext').textContent = 'Your average';
+
+      const gradeACount = studentGrades.filter(g => g.score >= 90).length;
+      document.getElementById('gradeACount').textContent = gradeACount;
+
+      const atRiskCount = studentGrades.filter(g => g.score < 65).length;
+      document.getElementById('atRiskCount').textContent = atRiskCount;
+      document.querySelector('.card:nth-child(4) h3').textContent = 'Below 65';
+
+      renderStudentRecentGrades();
+    }
+
+    // Render Recent Grades
+    function renderRecentGrades() {
+      const tbody = document.getElementById('recentGradesTable');
+      const recent = grades.slice(-5).reverse();
+
+      if (recent.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="no-data">No grades yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = recent.map(grade => `
+        <tr>
+          <td>${grade.name}</td>
+          <td>${grade.subject}</td>
+          <td><span class="grade-badge ${getGradeBadgeClass(grade.score)}">${getLetterGrade(grade.score)}</span></td>
+          <td>${grade.date}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderStudentRecentGrades() {
+      const student = students.find(s => s.roll.toLowerCase() === currentStudentRoll.toLowerCase());
+      const tbody = document.getElementById('recentGradesTable');
+      const studentGrades = grades.filter(g => g.studentId === student.id).slice(-5).reverse();
+
+      if (studentGrades.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="no-data">No grades yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = studentGrades.map(grade => `
+        <tr>
+          <td>${grade.subject}</td>
+          <td>${grade.score}</td>
+          <td><span class="grade-badge ${getGradeBadgeClass(grade.score)}">${getLetterGrade(grade.score)}</span></td>
+          <td>${grade.date}</td>
+        </tr>
+      `).join('');
+
+      const thead = document.querySelector('#recentGradesTable').parentElement.parentElement.querySelector('thead');
+      thead.innerHTML = `
+        <tr>
+          <th>Subject</th>
+          <th>Score</th>
+          <th>Grade</th>
+          <th>Date</th>
+        </tr>
+      `;
+    }
+
+    // Update Reports
+    function updateReports() {
+      if (grades.length === 0) {
+        document.getElementById('highestGrade').textContent = '-';
+        document.getElementById('highestStudent').textContent = 'N/A';
+        document.getElementById('lowestGrade').textContent = '-';
+        document.getElementById('lowestStudent').textContent = 'N/A';
+        document.getElementById('passRate').textContent = '0%';
+        document.getElementById('failRate').textContent = '0%';
+        return;
+      }
+
+      const highest = grades.reduce((prev, current) => 
+        prev.score > current.score ? prev : current
+      );
+      document.getElementById('highestGrade').textContent = highest.score;
+      document.getElementById('highestStudent').textContent = highest.name;
+
+      const lowest = grades.reduce((prev, current) => 
+        prev.score < current.score ? prev : current
+      );
+      document.getElementById('lowestGrade').textContent = lowest.score;
+      document.getElementById('lowestStudent').textContent = lowest.name;
+
+      const passCount = grades.filter(g => g.score >= 60).length;
+      const passRate = Math.round((passCount / grades.length) * 100);
+      document.getElementById('passRate').textContent = passRate + '%';
+
+      const failCount = grades.filter(g => g.score < 60).length;
+      const failRate = Math.round((failCount / grades.length) * 100);
+      document.getElementById('failRate').textContent = failRate + '%';
+
+      updateGradeDistribution();
+    }
+
+    // Update Grade Distribution
+    function updateGradeDistribution() {
+      const distribution = {
+        'A': grades.filter(g => g.score >= 90).length,
+        'B': grades.filter(g => g.score >= 80 && g.score < 90).length,
+        'C': grades.filter(g => g.score >= 70 && g.score < 80).length,
+        'D': grades.filter(g => g.score >= 60 && g.score < 70).length,
+        'F': grades.filter(g => g.score < 60).length
+      };
+
+      const total = grades.length;
+      const container = document.getElementById('gradeDistribution');
+      
+      container.innerHTML = Object.entries(distribution).map(([grade, count]) => `
+        <div style="flex: 1; min-width: 100px;">
+          <div style="background: var(--bg-soft); padding: 1rem; border-radius: 0.5rem; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 600; color: var(--primary); margin-bottom: 0.5rem;">${grade}</div>
+            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">${count}</div>
+            <div style="color: var(--muted); font-size: 0.85rem;">${total > 0 ? Math.round((count / total) * 100) : 0}%</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Helper Functions
+    function getLetterGrade(score) {
+      if (score >= 90) return 'A';
+      if (score >= 80) return 'B';
+      if (score >= 70) return 'C';
+      if (score >= 60) return 'D';
+      return 'F';
+    }
+
+    function getGradeBadgeClass(score) {
+      const grade = getLetterGrade(score);
+      return `grade-${grade.toLowerCase()}`;
+    }
+
+    function updateGradeSelectOptions() {
+      const select = document.getElementById('gradeStudent');
+      select.innerHTML = '<option value="">Select a student</option>' + 
+        students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+
+    // Modal Functions
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    // Toast Notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-out forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    }
+
+    // Close modal on background click
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('modal')) {
+        e.target.classList.remove('active');
+      }
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d87019e41713a46',t:'MTc3Mjg1OTMxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
